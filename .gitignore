@@ -1,0 +1,23 @@
+# Secrets — never commit real credentials
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Model artefacts — keep only the gitkeep placeholder
+models/*
+!models/.gitkeep
+
+# Raw / processed data — keep only the gitkeep placeholder
+data/*
+!data/.gitkeep
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+
+# Streamlit secrets
+.streamlit/secrets.toml
