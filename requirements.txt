@@ -11,3 +11,5 @@ shap
 plotly
 matplotlib
 python-dotenv
+python-dateutil
+confluent-kafka
