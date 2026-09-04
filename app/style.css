@@ -125,7 +125,7 @@ div[data-testid="column"]:nth-child(6) .stButton > button { animation-delay: -3.
 .alert-card {
   display: flex; gap: 0.9rem; align-items: flex-start;
   padding: 1.1rem 1.25rem; border-radius: 1.25rem;
-  background: rgba(255, 240, 234, 0.72);
+  background: rgba(11, 72, 203, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(14px);
   animation: alert-glow 3.4s ease-in-out infinite;
