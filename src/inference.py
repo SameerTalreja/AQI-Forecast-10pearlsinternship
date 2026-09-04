@@ -233,18 +233,41 @@ def load_model_artifacts(model_meta):
 
 
 def load_city_history(fs, city_name: str, hours_back: int = HISTORY_SEED_HOURS) -> dict:
-    """Read recent raw AQI history for one city from Hopsworks, as a
-    {timestamp: aqi} dict for seeding the recursive forecast."""
-    raw_fg = fs.get_feature_group(name=RAW_FEATURE_GROUP_NAME, version=RAW_FEATURE_GROUP_VERSION)
-    df = raw_fg.read()
+    """Read recent raw AQI history for one city from Hopsworks."""
+    raw_fg = fs.get_feature_group(
+        name=RAW_FEATURE_GROUP_NAME,
+        version=RAW_FEATURE_GROUP_VERSION
+    )
+
+    # Use Hive instead of the Hopsworks Query Service.
+    df = raw_fg.read(
+        read_options={"use_hive": True}
+    )
+
+    if df.empty:
+        return {}
+
     df = df[df["city"] == city_name].copy()
-    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
-    df = df.dropna(subset=["timestamp", "aqi"]).sort_values("timestamp")
+
+    df["timestamp"] = pd.to_datetime(
+        df["timestamp"],
+        utc=True,
+        errors="coerce"
+    )
+
+    df = (
+        df.dropna(subset=["timestamp", "aqi"])
+          .sort_values("timestamp")
+    )
 
     cutoff = df["timestamp"].max() - timedelta(hours=hours_back)
     df = df[df["timestamp"] >= cutoff]
 
-    history = {row["timestamp"]: float(row["aqi"]) for _, row in df.iterrows()}
+    history = {
+        row["timestamp"]: float(row["aqi"])
+        for _, row in df.iterrows()
+    }
+
     return history
 
 
