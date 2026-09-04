@@ -134,7 +134,6 @@ def chip_row(options: list[str], state_key: str) -> None:
             st.button(
                 option,
                 key=f"{state_key}-{option}",
-                width='stretch',
                 type="primary" if st.session_state[state_key] == option else "secondary",
                 on_click=lambda o=option: st.session_state.update({state_key: o}),
             )
