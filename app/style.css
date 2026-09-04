@@ -125,14 +125,14 @@ div[data-testid="column"]:nth-child(6) .stButton > button { animation-delay: -3.
 .alert-card {
   display: flex; gap: 0.9rem; align-items: flex-start;
   padding: 1.1rem 1.25rem; border-radius: 1.25rem;
-  background: rgba(11, 72, 203, 0.72);
+  background: rgba(255, 240, 234, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(14px);
   animation: alert-glow 3.4s ease-in-out infinite;
 }
 @keyframes alert-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(226, 63, 93, 0.14), 0 16px 40px -26px rgba(226, 63, 93, 0.7); }
-  50% { box-shadow: 0 0 0 12px rgba(226, 63, 93, 0), 0 22px 48px -22px rgba(226, 63, 93, 0.75); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(226, 63, 93, 0.14), 0 16px 40px -26px rgb(115, 3, 23); }
+  50% { box-shadow: 0 0 0 12px rgba(226, 63, 93, 0), 0 22px 48px -22px rgba(115, 3, 23); }
 }
 
 /* ---------- cards, chart, table ---------- */
