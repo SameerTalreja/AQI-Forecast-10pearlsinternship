@@ -234,7 +234,7 @@ st.markdown(
 st.write("")
 
 # ---------------------------------------------------------------- table
-with st.expander("See the hour-by-hour forecast"):
+with st.expander("See the hour-by-hour forecast for the next three days"):
     table = fc.copy()
     table["Day"] = table["time"].apply(_fmt_day)
     table["Time"] = table["time"].dt.strftime("%H:%M")
