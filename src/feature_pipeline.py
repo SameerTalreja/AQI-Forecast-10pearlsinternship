@@ -35,6 +35,14 @@ logger = logging.getLogger(__name__)
 RAW_FEATURE_GROUP_NAME = "aqi_raw"
 RAW_FEATURE_GROUP_VERSION = 1
 
+import socket
+import streamlit as st
+
+try:
+    ip = socket.gethostbyname("c.app.hopsworks.ai")
+    st.success(f"Hopsworks DNS works: {ip}")
+except Exception as e:
+    st.error(f"Hopsworks DNS failed: {e}")
 
 def get_hopsworks_project():
     """Log in to Hopsworks and return the Project handle (needed for
