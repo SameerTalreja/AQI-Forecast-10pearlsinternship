@@ -242,7 +242,6 @@ with st.expander("See the hour-by-hour forecast"):
     table["How it feels"] = table["AQI"].map(category_label)
     st.dataframe(
         table[["Day", "Time", "AQI", "How it feels"]],
-        width='stretch',
         hide_index=True,
         height=420,
     )
