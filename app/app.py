@@ -343,8 +343,26 @@ with tab_forecast:
         table["Time"] = table["time"].dt.strftime("%H:%M")
         table["AQI"] = table["aqi"].round().astype(int)
         table["How it feels"] = table["AQI"].map(category_label)
+        table_view = table[["Day", "Time", "AQI", "How it feels"]].style.set_properties(
+            **{
+                "background-color": "#eef7fb",
+                "color": "#17324d",
+                "border-color": "#c6dce5",
+            }
+        ).set_table_styles(
+            [
+                {
+                    "selector": "th",
+                    "props": [
+                        ("background-color", "#d8edf4"),
+                        ("color", "#17324d"),
+                        ("font-weight", "600"),
+                    ],
+                }
+            ]
+        )
         st.dataframe(
-            table[["Day", "Time", "AQI", "How it feels"]],
+            table_view,
             width='stretch',
             hide_index=True,
             height=420,
