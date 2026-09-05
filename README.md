@@ -55,20 +55,26 @@ The dashboard isn't just functional — it's designed to feel alive:
 
 **Screenshots:**
 
-*(Add your own screenshots here — e.g. `docs/hero.png`, `docs/trends.png` — and reference them like:)*
-
-[Dashboard hero]<img width="463" height="555" alt="image" src="https://github.com/user-attachments/assets/3370158b-1a4f-45a5-9911-de40bed77d30" />
 
 
-[Trends & insights tab]<img width="911" height="859" alt="image" src="https://github.com/user-attachments/assets/e5319040-b0e8-45e1-9253-23cca642d35c" />
+<img width="600" height="555" alt="image" src="https://github.com/user-attachments/assets/3370158b-1a4f-45a5-9911-de40bed77d30" />
+
+
+
+<img width="600" height="859" alt="image" src="https://github.com/user-attachments/assets/e5319040-b0e8-45e1-9253-23cca642d35c" />
 
 
 
 **Animated demo:**
-Static screenshots don't do the motion justice. Record a short screen capture of the live app (e.g. [ScreenToGif](https://www.screentogif.com/) on Windows, or [Kap](https://getkap.co/) on Mac), save it as `docs/demo.gif`, and it'll render right here:
-```markdown
-![Dashboard demo](docs/demo.gif)
-```
+
+
+https://github.com/user-attachments/assets/f58d81f2-1d3f-4f13-9609-c0ef1f5beded
+
+
+
+
+
+
 Or just click through the **[live dashboard](https://aqi-forecast-10pearls.streamlit.app/)** yourself — it's the real thing, not a mockup.
 
 ---
