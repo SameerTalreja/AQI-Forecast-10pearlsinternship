@@ -228,7 +228,13 @@ with tab_forecast:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Manrope, sans-serif", color="#1B2733"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            x=0,
+            font=dict(color="#1B2733"),
+        ),
         hovermode="x unified",
         transition=dict(duration=600, easing="cubic-in-out"),
     )
