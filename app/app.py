@@ -131,7 +131,7 @@ st.markdown(
       <div class="hero__value" style="color: {color}">{current}</div>
       <p class="hero__label">Air quality index</p>
       <span class="pill-badge" style="background: {color}">{category_label(current)}</span>
-    <p class="hero__guidance" style="text-align: center;">{GUIDANCE[key]}</p>
+            <div class="hero__guidance" style="width: 100%; text-align: center;">{GUIDANCE[key]}</div>
     </section>
     """,
     unsafe_allow_html=True,
