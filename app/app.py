@@ -352,11 +352,11 @@ with tab_forecast:
         ).set_table_styles(
             [
                 {
-                    "selector": "th",
+                    "selector": "thead th, thead th.col_heading, thead th.level0",
                     "props": [
-                        ("background-color", "#d8edf4"),
-                        ("color", "#17324d"),
-                        ("font-weight", "600"),
+                        ("background-color", "#d8edf4 !important"),
+                        ("color", "#17324d !important"),
+                        ("font-weight", "600 !important"),
                     ],
                 }
             ]
