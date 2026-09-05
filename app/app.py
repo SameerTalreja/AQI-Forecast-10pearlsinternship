@@ -41,25 +41,26 @@ st.set_page_config(
 
 CSS = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
 st.markdown(
-    f"""
-    <style>
-    {CSS}
-
-    /* Keep the page title above Streamlit's open dropdown layer. */
-    div.topbar {{
-        position: relative;
-        z-index: 1000001;
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-    }}
-    div.topbar * {{
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True,
+        f"""
+        <style>
+            {CSS}
+            [data-testid="stExpander"] summary,
+            [data-testid="stExpander"] summary:hover,
+            [data-testid="stExpander"] summary:focus,
+            [data-testid="stExpander"] summary:focus-visible,
+            [data-testid="stExpander"] summary:active,
+            [data-testid="stExpander"] summary:has(+ *) {{
+                color: inherit !important;
+                background-color: transparent !important;
+                outline: none !important;
+                box-shadow: none !important;
+            }}
+            [data-testid="stExpander"] summary * {{
+                color: inherit !important;
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
 )
 
 WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
