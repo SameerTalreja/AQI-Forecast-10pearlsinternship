@@ -83,7 +83,11 @@ st.markdown(
       <div class="bg-blob bg-blob--3"></div>
       <div class="bg-blob bg-blob--4"></div>
     </div>
-    <div class="topbar">🌤️ Pakistan AQI Forecast</div>
+    <div class="topbar" role="banner">
+      <span aria-hidden="true">🌤️</span>
+      Pakistan AQI Forecast
+      <span aria-hidden="true">🌤️</span>
+    </div>
     """,
     unsafe_allow_html=True,
 )
@@ -168,7 +172,6 @@ st.markdown(
 )
 
 st.write("")
-
 
 # chips
 def chip_row(options: list[str], state_key: str) -> None:
@@ -339,7 +342,12 @@ with tab_forecast:
         st.caption("This explains the next hour's number specifically — not the whole 3-day forecast.")
     else:
         st.markdown(
-    
+            """
+            <div class="card-pad">
+              <div class="section-title">What's driving this forecast</div>
+              <div class="section-sub">The biggest reasons behind the very next hour's prediction.</div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
