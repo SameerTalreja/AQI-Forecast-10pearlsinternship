@@ -23,6 +23,7 @@ from aqi_data import (
     category_label,
     category_phrase,
     daily_means,
+    explain_current,
     fetch_city_air,
     forecast,
 )
@@ -73,6 +74,11 @@ def load_forecast(city: str, model: str):
     return forecast(load_air(city), model)
 
 
+@st.cache_data(ttl=10 * 60, show_spinner=False)
+def load_explanation(city: str, model: str):
+    return explain_current(load_air(city), model)
+
+
 city = st.session_state["city"]
 model = st.session_state["model"]
 
@@ -93,6 +99,7 @@ loading_slot.markdown(
 try:
     air = load_air(city)
     fc = load_forecast(city, model)
+    explanation = load_explanation(city, model)
 except Exception as exc:  # noqa: BLE001 - surface pipeline issues plainly
     loading_slot.empty()
     st.error(f"Couldn't reach the air quality pipeline just now: {exc}")
@@ -233,8 +240,57 @@ st.markdown(
 
 st.write("")
 
+# ---------------------------------------------------------------- why
+st.markdown(
+    """
+    <div class="card-pad">
+      <div class="section-title">What's driving this forecast</div>
+      <div class="section-sub">How much each signal is pushing the next hour's AQI up or down.</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+if explanation:
+    exp_df = pd.DataFrame(explanation).iloc[::-1]  # reverse so strongest driver ends up on top in a horizontal bar chart
+    bar_colors = [CATEGORY_COLOR["unhealthy"] if v > 0 else CATEGORY_COLOR["good"] for v in exp_df["shap_value"]]
+
+    exp_fig = go.Figure(go.Bar(
+        x=exp_df["shap_value"],
+        y=exp_df["label"],
+        orientation="h",
+        marker_color=bar_colors,
+        hovertemplate="%{y}: %{x:+.1f} AQI<extra></extra>",
+    ))
+    exp_fig.add_vline(x=0, line_color="rgba(27,39,51,0.25)", line_width=1)
+    exp_fig.update_layout(
+        height=280,
+        margin=dict(l=10, r=10, t=10, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Manrope, sans-serif", color="#1B2733"),
+        xaxis=dict(title="Effect on predicted AQI", gridcolor="rgba(27,39,51,0.08)", zeroline=False),
+        yaxis=dict(title=None),
+    )
+    st.plotly_chart(exp_fig, width='stretch', config={"displayModeBar": False})
+    st.caption("Coral bars push the forecast toward worse air; blue bars pull it toward better air.")
+else:
+    st.markdown(
+        """
+        <div class="glass summary-card">
+          The LSTM model doesn't get a driver breakdown here — explaining deep learning
+          predictions needs a different, much slower technique than the one used for the
+          other three models. Switch to Random Forest, XGBoost, or Ridge Regression to see
+          what's driving the forecast.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.write("")
+
 # ---------------------------------------------------------------- table
-with st.expander("See the hour-by-hour forecast for the next three days"):
+with st.expander("See the hour-by-hour forecast"):
     table = fc.copy()
     table["Day"] = table["time"].apply(_fmt_day)
     table["Time"] = table["time"].dt.strftime("%H:%M")

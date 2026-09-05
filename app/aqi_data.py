@@ -209,6 +209,42 @@ def forecast(air: CityAir, model_name: str, horizon: int = 72) -> pd.DataFrame:
     return result[["time", "aqi"]].head(horizon).reset_index(drop=True)
 
 
+def explain_current(air: CityAir, model_name: str, top_n: int = 6):
+    """
+    Explain the model's next-hour prediction using SHAP — which features
+    pushed the forecast up or down, and by how much. Returns None for
+    the LSTM model (see src.explainability's module docstring for why
+    that's a deliberate scope decision, not a bug) or if anything about
+    the explanation fails — callers should treat None as "no
+    explanation available right now" and hide the panel rather than error.
+    """
+    artifacts = _load_model_artifacts(model_name)
+    if artifacts["kind"] == "lstm":
+        return None
+
+    from src.explainability import explain_prediction
+
+    # artifacts["kind"] is only the generic "classical"/"lstm" split —
+    # SHAP needs the SPECIFIC model type (random_forest/xgboost/ridge)
+    # to pick the right explainer, so derive that from the registered
+    # model name instead (e.g. "aqi_random_forest" -> "random_forest").
+    specific_kind = MODEL_CHOICES[model_name].removeprefix("aqi_")
+
+    history = air.history_utc
+    last_timestamp = max(history.keys())
+    forecast_time = last_timestamp + pd.Timedelta(hours=1)
+
+    try:
+        return explain_prediction(
+            specific_kind, artifacts["model"], air.city, history, forecast_time,
+            artifacts["medians"], artifacts["feature_columns"], top_n=top_n,
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"SHAP explanation failed: {e}")
+        return None
+
+
 def daily_means(frame: pd.DataFrame) -> pd.DataFrame:
     out = frame.copy()
     out["day"] = out["time"].dt.normalize()

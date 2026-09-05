@@ -86,6 +86,56 @@ def _rolling_stats(history: dict, target_time: pd.Timestamp, window_hours: int):
     return mean, std
 
 
+def build_feature_row(
+    history: dict, forecast_time: pd.Timestamp, city_name: str,
+    medians: dict, feature_columns: list,
+) -> pd.DataFrame:
+    """
+    Build the exact single-row feature vector a classical model expects
+    for a given forecast_time, given a {timestamp: aqi} history. This is
+    the same logic recursive_forecast() uses internally for each step —
+    pulled out as its own function so explainability.py can build an
+    IDENTICAL input vector when explaining "why did the model predict
+    this", rather than risking a second, subtly different reimplementation.
+    """
+    row = {}
+    row["hour"] = forecast_time.hour
+    row["day_of_week"] = forecast_time.dayofweek
+    row["month"] = forecast_time.month
+    row["is_weekend"] = int(forecast_time.dayofweek in [5, 6])
+    row["is_stale"] = 0
+
+    for lag_hours in LAG_HOURS:
+        tolerance = max(lag_hours * 0.2, 0.25)
+        val = _lookup_lag(history, forecast_time, lag_hours, tolerance)
+        row[f"lag_{lag_hours}h_aqi"] = val
+
+    for window_hours in ROLLING_WINDOWS_HOURS:
+        mean, std = _rolling_stats(history, forecast_time, window_hours)
+        row[f"rolling_{window_hours}h_mean_aqi"] = mean
+        row[f"rolling_{window_hours}h_std_aqi"] = std
+
+    latest_ts = max(history.keys())
+    latest_val = history[latest_ts]
+    prev_lag = row.get("lag_1h_aqi")
+    if prev_lag not in (None, 0):
+        row["aqi_change_rate"] = (latest_val - prev_lag) / prev_lag
+    else:
+        row["aqi_change_rate"] = None
+
+    for city in CITIES:
+        row[f"city_{city}"] = 1 if city == city_name else 0
+
+    X_row = {}
+    for col in feature_columns:
+        val = row.get(col)
+        if val is None or (isinstance(val, float) and np.isnan(val)):
+            val = medians.get(col, 0)
+        X_row[col] = val
+
+    return pd.DataFrame([X_row])[feature_columns]
+
+
 def recursive_forecast(
     model, medians: dict, feature_columns: list, city_name: str,
     history: dict, last_timestamp: pd.Timestamp,
@@ -111,44 +161,7 @@ def recursive_forecast(
     for step in range(1, horizon_hours + 1):
         forecast_time = last_timestamp + timedelta(hours=step)
 
-        row = {}
-        row["hour"] = forecast_time.hour
-        row["day_of_week"] = forecast_time.dayofweek
-        row["month"] = forecast_time.month
-        row["is_weekend"] = int(forecast_time.dayofweek in [5, 6])
-        row["is_stale"] = 0
-
-        for lag_hours in LAG_HOURS:
-            tolerance = max(lag_hours * 0.2, 0.25)
-            val = _lookup_lag(history, forecast_time, lag_hours, tolerance)
-            row[f"lag_{lag_hours}h_aqi"] = val
-
-        for window_hours in ROLLING_WINDOWS_HOURS:
-            mean, std = _rolling_stats(history, forecast_time, window_hours)
-            row[f"rolling_{window_hours}h_mean_aqi"] = mean
-            row[f"rolling_{window_hours}h_std_aqi"] = std
-
-        # aqi_change_rate: change from the most recent known/predicted point
-        latest_ts = max(history.keys())
-        latest_val = history[latest_ts]
-        prev_lag = row.get("lag_1h_aqi")
-        if prev_lag not in (None, 0):
-            row["aqi_change_rate"] = (latest_val - prev_lag) / prev_lag
-        else:
-            row["aqi_change_rate"] = None
-
-        for city in CITIES:
-            row[f"city_{city}"] = 1 if city == city_name else 0
-
-        # Assemble into the exact column order the model expects,
-        # filling any missing/unseen columns with training medians.
-        X_row = {}
-        for col in feature_columns:
-            val = row.get(col)
-            if val is None or (isinstance(val, float) and np.isnan(val)):
-                val = medians.get(col, 0)
-            X_row[col] = val
-        X = pd.DataFrame([X_row])[feature_columns]
+        X = build_feature_row(history, forecast_time, city_name, medians, feature_columns)
 
         pred = float(model.predict(X)[0])
         pred = max(pred, 0.0)  # AQI can't be negative
@@ -233,41 +246,18 @@ def load_model_artifacts(model_meta):
 
 
 def load_city_history(fs, city_name: str, hours_back: int = HISTORY_SEED_HOURS) -> dict:
-    """Read recent raw AQI history for one city from Hopsworks."""
-    raw_fg = fs.get_feature_group(
-        name=RAW_FEATURE_GROUP_NAME,
-        version=RAW_FEATURE_GROUP_VERSION
-    )
-
-    # Use Hive instead of the Hopsworks Query Service.
-    df = raw_fg.read(
-        read_options={"use_hive": True}
-    )
-
-    if df.empty:
-        return {}
-
+    """Read recent raw AQI history for one city from Hopsworks, as a
+    {timestamp: aqi} dict for seeding the recursive forecast."""
+    raw_fg = fs.get_feature_group(name=RAW_FEATURE_GROUP_NAME, version=RAW_FEATURE_GROUP_VERSION)
+    df = raw_fg.read()
     df = df[df["city"] == city_name].copy()
-
-    df["timestamp"] = pd.to_datetime(
-        df["timestamp"],
-        utc=True,
-        errors="coerce"
-    )
-
-    df = (
-        df.dropna(subset=["timestamp", "aqi"])
-          .sort_values("timestamp")
-    )
+    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
+    df = df.dropna(subset=["timestamp", "aqi"]).sort_values("timestamp")
 
     cutoff = df["timestamp"].max() - timedelta(hours=hours_back)
     df = df[df["timestamp"] >= cutoff]
 
-    history = {
-        row["timestamp"]: float(row["aqi"])
-        for _, row in df.iterrows()
-    }
-
+    history = {row["timestamp"]: float(row["aqi"]) for _, row in df.iterrows()}
     return history
 
 
@@ -303,3 +293,8 @@ if __name__ == "__main__":
     forecasts = generate_all_forecasts()
     pd.set_option("display.max_rows", None)
     print(forecasts.to_string())
+
+
+
+
+
