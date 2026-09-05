@@ -249,3 +249,15 @@ def daily_means(frame: pd.DataFrame) -> pd.DataFrame:
     out = frame.copy()
     out["day"] = out["time"].dt.normalize()
     return out.groupby("day", as_index=False)["aqi"].mean().round()
+
+
+@st.cache_data(ttl=30 * 60, show_spinner=False)
+def load_all_history() -> pd.DataFrame:
+    """Full raw AQI history across all cities, for the Trends & insights
+    tab. Cached longer (30 min) than the live forecast data — trend
+    charts don't need to be as fresh as the current-conditions hero."""
+    from src.eda import load_all_history as _load_all_history
+
+    project = _get_project()
+    fs = get_feature_store(project)
+    return _load_all_history(fs)

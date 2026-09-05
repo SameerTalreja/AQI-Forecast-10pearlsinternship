@@ -10,7 +10,7 @@
   --good: #22c58b;
   --moderate: #ffc93c;
   --severe: #a855c9;
-  --hazard: #68091a;
+  --hazard: #e23f5d;
   --ink: #1b2733;
   --bg: #f5faff;
   --glass-bg: rgba(255, 255, 255, 0.65);
@@ -131,8 +131,8 @@ div[data-testid="column"]:nth-child(6) .stButton > button { animation-delay: -3.
   animation: alert-glow 3.4s ease-in-out infinite;
 }
 @keyframes alert-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(226, 63, 93, 0.14), 0 16px 40px -26px rgb(115, 3, 23); }
-  50% { box-shadow: 0 0 0 12px rgba(226, 63, 93, 0), 0 22px 48px -22px rgba(115, 3, 23); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(226, 63, 93, 0.14), 0 16px 40px -26px rgba(226, 63, 93, 0.7); }
+  50% { box-shadow: 0 0 0 12px rgba(226, 63, 93, 0), 0 22px 48px -22px rgba(226, 63, 93, 0.75); }
 }
 
 /* ---------- cards, chart, table ---------- */
@@ -154,7 +154,53 @@ div[data-testid="stDataFrame"] { border-radius: 1rem; overflow: hidden; }
 
 .cat-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 9999px; margin-right: 0.5rem; vertical-align: middle; }
 
+/* ---------- driver list (SHAP explanation, plain-language) ---------- */
+.driver-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.driver-row {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.7rem 1.1rem; border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+}
+.driver-icon { font-size: 0.85rem; width: 1rem; text-align: center; flex-shrink: 0; }
+.driver-text { flex: 1; min-width: 0; }
+.driver-label { font-size: 0.92rem; font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; }
+.driver-bar-track {
+  height: 6px; border-radius: 999px;
+  background: rgba(27, 39, 51, 0.08);
+  overflow: hidden;
+}
+.driver-bar-fill {
+  height: 100%; border-radius: 999px;
+  width: var(--w);
+  animation: driver-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes driver-grow { from { width: 0; } to { width: var(--w); } }
+.driver-value { font-weight: 700; font-size: 0.85rem; white-space: nowrap; flex-shrink: 0; }
+.driver-row:nth-child(1) .driver-bar-fill { animation-delay: 0.05s; }
+.driver-row:nth-child(2) .driver-bar-fill { animation-delay: 0.12s; }
+.driver-row:nth-child(3) .driver-bar-fill { animation-delay: 0.19s; }
+.driver-row:nth-child(4) .driver-bar-fill { animation-delay: 0.26s; }
+.driver-row:nth-child(5) .driver-bar-fill { animation-delay: 0.33s; }
+.driver-row:nth-child(6) .driver-bar-fill { animation-delay: 0.40s; }
+
 .site-footer { margin-top: 2.5rem; text-align: center; font-size: 0.82rem; line-height: 1.7; color: rgba(27, 39, 51, 0.55); }
+
+/* ---------- tabs ---------- */
+div[data-testid="stTabs"] button[role="tab"] {
+  font-family: "Fraunces", serif; font-weight: 600; font-size: 1rem;
+  color: rgba(27, 39, 51, 0.55);
+}
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+  color: var(--sky);
+}
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
+  background-color: var(--sky);
+}
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {
+  background-color: rgba(27, 39, 51, 0.08);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .bg-blob, .stButton > button, .alert-card, .hero { animation: none !important; }
