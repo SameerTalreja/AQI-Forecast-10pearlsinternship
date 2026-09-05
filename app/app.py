@@ -40,7 +40,27 @@ st.set_page_config(
 )
 
 CSS = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
-st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
+st.markdown(
+    f"""
+    <style>
+    {CSS}
+
+    /* Keep the page title above Streamlit's open dropdown layer. */
+    div.topbar {{
+        position: relative;
+        z-index: 1000001;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }}
+    div.topbar * {{
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -309,14 +329,7 @@ with tab_forecast:
         st.caption("This explains the next hour's number specifically — not the whole 3-day forecast.")
     else:
         st.markdown(
-            """
-            <div class="glass summary-card">
-              The LSTM model doesn't get a driver breakdown here — explaining deep learning
-              predictions needs a different, much slower technique than the one used for the
-              other three models. Switch to Random Forest, XGBoost, or Ridge Regression to see
-              what's driving the forecast.
-            </div>
-            """,
+    
             unsafe_allow_html=True,
         )
 
