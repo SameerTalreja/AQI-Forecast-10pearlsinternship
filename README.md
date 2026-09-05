@@ -57,8 +57,8 @@ The dashboard isn't just functional — it's designed to feel alive:
 
 *(Add your own screenshots here — e.g. `docs/hero.png`, `docs/trends.png` — and reference them like:)*
 ```markdown
-![Dashboard hero](docs/hero.png)
-![Trends & insights tab](docs/trends.png)
+[Dashboard hero](docs/hero.png)
+[Trends & insights tab](docs/trends.png)
 ```
 
 **Animated demo:**
