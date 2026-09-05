@@ -417,8 +417,15 @@ with tab_trends:
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Manrope, sans-serif", color="#1B2733"),
             yaxis=dict(title="AQI", gridcolor="rgba(27,39,51,0.08)"),
-            xaxis=dict(title=None, gridcolor="rgba(27,39,51,0.08)"),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+            xaxis=dict(
+                title=None,
+                gridcolor="rgba(27,39,51,0.08)",
+                tickfont=dict(color="#000000"),
+            ),
+            legend=dict(
+                orientation="h", yanchor="bottom", y=1.02, x=0,
+                font=dict(color="#000000"),
+            ),
             hovermode="x unified",
         )
         st.plotly_chart(trend_fig, width='stretch', config={"displayModeBar": False})
