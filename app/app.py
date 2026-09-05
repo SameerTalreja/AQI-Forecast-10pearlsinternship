@@ -1,7 +1,4 @@
 """Pakistan AQI Forecast — Streamlit dashboard.
-
-Run locally (from the project root):
-    streamlit run app/app.py
 """
 
 from __future__ import annotations
@@ -47,7 +44,7 @@ st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
 
 WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-# ---------------------------------------------------------------- background
+# background
 st.markdown(
     """
     <div class="bg-sky-canvas" aria-hidden="true">
@@ -61,7 +58,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------------------------------------------------------------- state
+# state
 st.session_state.setdefault("city", "Quetta")
 st.session_state.setdefault("model", "Random Forest")
 
@@ -126,7 +123,7 @@ peak_aqi = int(round(peak_row["aqi"]))
 peak_time: pd.Timestamp = peak_row["time"]
 peak_key = category_key(peak_aqi)
 
-# ---------------------------------------------------------------- hero
+#  hero
 st.markdown(
     f"""
     <section class="hero glass" style="background: {HERO_GRADIENT[key]}">
@@ -134,7 +131,7 @@ st.markdown(
       <div class="hero__value" style="color: {color}">{current}</div>
       <p class="hero__label">Air quality index</p>
       <span class="pill-badge" style="background: {color}">{category_label(current)}</span>
-      <p class="hero__guidance">{GUIDANCE[key]}</p>
+    <p class="hero__guidance" style="text-align: center;">{GUIDANCE[key]}</p>
     </section>
     """,
     unsafe_allow_html=True,
@@ -143,7 +140,7 @@ st.markdown(
 st.write("")
 
 
-# ---------------------------------------------------------------- chips
+# chips
 def chip_row(options: list[str], state_key: str) -> None:
     columns = st.columns(len(options))
     for column, option in zip(columns, options):
@@ -160,7 +157,7 @@ def chip_row(options: list[str], state_key: str) -> None:
 chip_row(list(CITIES), "city")
 chip_row(MODELS, "model")
 
-# ---------------------------------------------------------------- alert
+# alert
 if peak_aqi >= HAZARD_THRESHOLD:
     st.markdown(
         f"""
@@ -176,11 +173,11 @@ if peak_aqi >= HAZARD_THRESHOLD:
 
 st.write("")
 
-# ---------------------------------------------------------------- tabs
+#  tabs
 tab_forecast, tab_trends = st.tabs(["Forecast", "Trends & insights"])
 
 with tab_forecast:
-    # ------------------------------------------------------------ chart
+    #  chart
     st.markdown(
         f"""
         <div class="card-pad">
@@ -240,7 +237,7 @@ with tab_forecast:
 
     st.plotly_chart(figure, width='stretch', config={"displayModeBar": False})
 
-    # ------------------------------------------------------------ summary
+    #  summary
     st.markdown(
         f"""
         <div class="glass summary-card">
@@ -255,7 +252,7 @@ with tab_forecast:
 
     st.write("")
 
-    # ------------------------------------------------------------ why
+    #  why
     st.markdown(
         """
         <div class="card-pad">
@@ -319,7 +316,7 @@ with tab_forecast:
 
     st.write("")
 
-    # ------------------------------------------------------------ table
+    #  table
     with st.expander("See the hour-by-hour forecast"):
         table = fc.copy()
         table["Day"] = table["time"].apply(_fmt_day)
@@ -346,7 +343,7 @@ with tab_trends:
             unsafe_allow_html=True,
         )
     else:
-        # -------------------------------------------------------- city comparison
+        #  city comparison
         st.markdown(
             """
             <div class="card-pad">
@@ -375,7 +372,7 @@ with tab_trends:
 
         st.write("")
 
-        # -------------------------------------------------------- trend over time
+        # trend over time
         st.markdown(
             """
             <div class="card-pad">
@@ -408,7 +405,7 @@ with tab_trends:
 
         st.write("")
 
-        # -------------------------------------------------------- hourly + weekday pattern for selected city
+        #  hourly + weekday pattern for selected city
         st.markdown(
             f"""
             <div class="card-pad">
@@ -456,7 +453,7 @@ with tab_trends:
 
         st.write("")
 
-        # -------------------------------------------------------- data freshness
+        #  data freshness
         with st.expander("How fresh is each city's data?"):
             st.caption(
                 "Some monitoring stations report near-hourly; others update every few days. "
@@ -473,7 +470,7 @@ with tab_trends:
             })
             st.dataframe(freshness_display, width='stretch', hide_index=True)
 
-# ---------------------------------------------------------------- footer
+#  footer
 st.markdown(
     """
     <div class="site-footer">
