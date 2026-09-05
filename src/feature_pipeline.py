@@ -8,10 +8,6 @@ Design: we maintain TWO feature groups —
   2. `aqi_features` — engineered features, fully recomputed from the
      complete raw history on every run.
 
-Recomputing engineered features from full history each run (rather
-than incrementally) guarantees lag/rolling features are always
-correct, at the cost of a bit of redundant compute — an acceptable
-tradeoff at this data volume (a handful of cities, hourly cadence).
 """
 
 import logging
@@ -54,24 +50,12 @@ def get_feature_store(project=None):
 
 
 def _prepare_for_hopsworks(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Normalize dtypes before writing to Hopsworks: convert timezone-aware
-    timestamps to naive UTC (Hopsworks' online store doesn't reliably
-    handle tz-aware datetimes), and ensure object columns with all-None
-    values don't break schema inference.
-    """
+
     df = df.copy()
     if "timestamp" in df.columns:
         df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
         df["timestamp"] = df["timestamp"].dt.tz_convert("UTC").dt.tz_localize(None)
 
-    # Hopsworks needs consistent numeric dtypes; force lag/rolling/raw
-    # numeric columns to float64 explicitly. pd.to_numeric() alone can
-    # infer int64 when every value in a batch happens to be a whole
-    # number (e.g. a single snapshot with no decimals), which then
-    # mismatches a feature group schema already registered as 'double'
-    # from an earlier batch that did have decimals. Always forcing
-    # float64 avoids that inconsistency regardless of batch content.
     numeric_like_prefixes = ("lag_", "rolling_", "aqi_change_rate")
     for col in df.columns:
         if col.startswith(numeric_like_prefixes) or col in (

@@ -1,21 +1,3 @@
-"""Data + forecasting adapter for the Streamlit dashboard.
-
-This keeps the exact same public interface the Lovable-generated app.py
-expects (CityAir, fetch_city_air, forecast, CATEGORIES, CATEGORY_COLOR,
-HERO_GRADIENT, GUIDANCE, category_key/label/phrase, daily_means) — but
-underneath, it's wired to our REAL trained pipeline instead of ad-hoc
-Open-Meteo data + on-the-fly sklearn training:
-
-  fetch_city_air()  -> pulls real history from the Hopsworks feature
-                        store (AQICN + OpenWeather derived), via
-                        src.inference.load_city_history
-  forecast()        -> calls our already-trained, registered models
-                        (Ridge, Random Forest, XGBoost, LSTM) through
-                        src.forecasting.forecast_city, which does the
-                        recursive 72h projection we built and tested
-                        earlier — no retraining happens here.
-"""
-
 from __future__ import annotations
 
 import os
@@ -33,11 +15,6 @@ from src.feature_pipeline import get_hopsworks_project, get_feature_store
 from src.inference import load_city_history
 from src.forecasting import MODEL_CHOICES
 
-# ---------------------------------------------------------------------
-# Re-exported constants — CITIES/MODELS/HAZARD_THRESHOLD now come from
-# the real project config, so there's one source of truth instead of
-# two copies that could drift apart.
-# ---------------------------------------------------------------------
 
 CITIES: dict[str, tuple[float, float]] = {
     name: (info["lat"], info["lon"]) for name, info in _SRC_CITIES.items()
@@ -47,12 +24,7 @@ MODELS: list[str] = list(MODEL_CHOICES.keys())
 
 HAZARD_THRESHOLD = HAZARDOUS_AQI_THRESHOLD
 
-# ---------------------------------------------------------------------
-# Category system — thresholds match our EPA breakpoints exactly
-# (50/100/150/200/300), so this is kept as designed rather than
-# rerouted through src.inference.aqi_to_category, avoiding a second
-# layer of indirection for identical boundaries.
-# ---------------------------------------------------------------------
+
 
 CATEGORIES = [
     (50, "good", "Good", "clean"),
@@ -224,10 +196,7 @@ def explain_current(air: CityAir, model_name: str, top_n: int = 6):
 
     from src.explainability import explain_prediction
 
-    # artifacts["kind"] is only the generic "classical"/"lstm" split —
-    # SHAP needs the SPECIFIC model type (random_forest/xgboost/ridge)
-    # to pick the right explainer, so derive that from the registered
-    # model name instead (e.g. "aqi_random_forest" -> "random_forest").
+
     specific_kind = MODEL_CHOICES[model_name].removeprefix("aqi_")
 
     history = air.history_utc

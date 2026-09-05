@@ -22,8 +22,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 # Verified correct AQICN stations for cities where the matched station
-# name doesn't literally contain the city name (checked manually against
-# aqicn.org station pages) — avoids false-positive mismatch warnings.
 KNOWN_GOOD_STATIONS = {
     "quetta": ["irrigation directorate"],
     "faisalabad": ["fda-01"],
@@ -141,8 +139,7 @@ def fetch_current_snapshot(city_name: str) -> dict | None:
 
     merged = dict(aqi_record)
     if weather_record:
-        # Prefer OpenWeather's dedicated weather fields; fall back to
-        # AQICN's inline weather readings if OpenWeather call failed.
+ 
         merged["temp"] = weather_record.get("temp") if weather_record.get("temp") is not None else aqi_record.get("aqicn_temp")
         merged["humidity"] = weather_record.get("humidity") if weather_record.get("humidity") is not None else aqi_record.get("aqicn_humidity")
         merged["pressure"] = weather_record.get("pressure") if weather_record.get("pressure") is not None else aqi_record.get("aqicn_pressure")
@@ -153,9 +150,7 @@ def fetch_current_snapshot(city_name: str) -> dict | None:
         merged["pressure"] = aqi_record.get("aqicn_pressure")
         merged["wind_speed"] = aqi_record.get("aqicn_wind")
 
-    # Flag stale readings: AQICN stations sometimes return a cached
-    # last-known reading rather than a fresh one. We keep the row (useful
-    # for training) but mark it so downstream steps can filter/weight it.
+ 
     merged["is_stale"] = _is_reading_stale(merged.get("timestamp"))
     if merged["is_stale"]:
         logger.warning(f"[{city_name}] Stale reading detected (timestamp: {merged.get('timestamp')}).")
@@ -178,7 +173,7 @@ def _is_reading_stale(timestamp_str: str | None) -> bool:
     STALE_THRESHOLD_HOURS compared to now.
     """
     if not timestamp_str:
-        return True  # missing timestamp is treated as stale/untrustworthy
+        return True  
 
     try:
         reading_time = date_parser.parse(timestamp_str)
@@ -261,7 +256,5 @@ def fetch_all_cities_snapshot(sleep_between_calls: float = 1.0) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    # Quick manual test: run `python -m src.data_ingestion` from repo root
-    # after setting AQICN_API_KEY and OPENWEATHER_API_KEY in your .env
     df = fetch_all_cities_snapshot()
     print(df.to_string())

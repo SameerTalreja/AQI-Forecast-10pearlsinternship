@@ -1,15 +1,5 @@
 """TensorFlow LSTM training pipeline — the "deep learning" entry in the
 project's statistical-to-deep-learning model lineup.
-
-Design: a single global LSTM (not one per city), matching the same
-"city as a feature" strategy used for the classical models. Each
-training sample is a sequence of the past `SEQ_LENGTH` hours of AQI
-(scaled per-city, since cities sit at very different AQI levels) plus
-that sample's city as a one-hot side-input, predicting the next hour's
-AQI. This is a single-step model — 72-hour forecasts are produced by
-feeding predictions back in recursively, the same conceptual approach
-as the classical models in inference.py (a separate LSTM-specific
-recursive loop is added when this is wired into the dashboard).
 """
 
 import json
@@ -34,9 +24,6 @@ MODEL_DIR = "models/lstm"
 TEST_FRACTION = 0.2
 
 
-# ---------------------------------------------------------------------
-# Data prep — pure pandas/numpy/sklearn, testable without TensorFlow.
-# ---------------------------------------------------------------------
 
 def load_raw_history(project=None) -> pd.DataFrame:
     """Read the full raw AQI history (all cities) from Hopsworks."""
@@ -118,11 +105,6 @@ def city_ids_to_onehot(city_ids: np.ndarray) -> np.ndarray:
 
 
 def time_based_split_sequences(X, y, city_ids, timestamps, test_fraction: float = TEST_FRACTION):
-    """
-    Time-based split done PER CITY (since sequences from different
-    cities interleave in time but each city's own series must stay
-    chronologically ordered within its own split) — then combined.
-    """
     train_idx, test_idx = [], []
     for city in np.unique(city_ids):
         city_mask = np.where(city_ids == city)[0]
@@ -138,11 +120,6 @@ def time_based_split_sequences(X, y, city_ids, timestamps, test_fraction: float 
         X[test_idx], y[test_idx], city_ids[test_idx],
     )
 
-
-# ---------------------------------------------------------------------
-# Model — requires TensorFlow. Kept separate from the data-prep
-# functions above so those can be unit tested without a TF install.
-# ---------------------------------------------------------------------
 
 def build_lstm_model(seq_length: int, n_cities: int):
     import tensorflow as tf
@@ -163,8 +140,6 @@ def build_lstm_model(seq_length: int, n_cities: int):
 
 
 def inverse_transform_per_city(scaled_values, city_ids, scalers):
-    """Convert scaled [0,1] predictions/targets back to real AQI scale,
-    using each sample's own city-specific scaler."""
     result = np.zeros_like(scaled_values, dtype=float)
     for city in np.unique(city_ids):
         mask = city_ids == city

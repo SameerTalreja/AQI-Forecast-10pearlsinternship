@@ -1,17 +1,3 @@
-"""SHAP explainability for the classical models (Ridge, Random Forest,
-XGBoost), explaining a specific prediction — normally the model's
-current "next hour" forecast — in terms of which features pushed it up
-or down.
-
-Scope note: LSTM is intentionally NOT covered here. SHAP support for
-sequence models (DeepExplainer/GradientExplainer) is significantly
-slower and more fragile than TreeExplainer/LinearExplainer, and would
-need its own background-sequence sampling strategy. Given the project
-timeline, explaining the three classical models — which is also where
-SHAP is fastest and most reliable — was judged the better use of time.
-This is a deliberate scope decision, not an oversight.
-"""
-
 import logging
 
 import numpy as np
@@ -22,8 +8,7 @@ from src.inference import build_feature_row
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# Human-readable labels for engineered feature names, used when
-# displaying explanations to end users rather than raw column names.
+
 FEATURE_LABELS = {
     "hour": "Time of day",
     "day_of_week": "Day of the week",
@@ -42,11 +27,7 @@ FEATURE_LABELS = {
 
 
 def _label_for(feature_name: str, city_name: str) -> str | None:
-    """
-    Return a human-readable label for a feature column, or None if this
-    feature shouldn't be shown (inactive city one-hot columns — only
-    the active city's own dummy is meaningful to display).
-    """
+
     if feature_name.startswith("city_"):
         this_city = feature_name[len("city_"):]
         if this_city != city_name:
@@ -56,12 +37,7 @@ def _label_for(feature_name: str, city_name: str) -> str | None:
 
 
 def _build_explainer(model_kind: str, model, background_df: pd.DataFrame):
-    """
-    Construct the appropriate SHAP explainer for the model family.
-    Tree models get the fast, exact TreeExplainer (no background data
-    needed, using tree_path_dependent perturbation). Ridge gets a
-    LinearExplainer with a small background sample as its baseline.
-    """
+
     import shap
 
     if model_kind in ("random_forest", "xgboost"):
@@ -78,33 +54,16 @@ def explain_prediction(
     forecast_time: pd.Timestamp, medians: dict, feature_columns: list,
     top_n: int = 6,
 ) -> list[dict]:
-    """
-    Explain a single prediction (by default, the model's next-hour
-    forecast) using SHAP. Returns a list of up to top_n dicts, sorted
-    by |SHAP value| descending:
-
-        {"feature": raw column name, "label": human-readable label,
-         "value": the feature's actual value, "shap_value": contribution
-         (positive = pushed AQI up, negative = pushed AQI down)}
-
-    Inactive city one-hot columns are filtered out before ranking, so
-    top_n reflects genuinely meaningful features rather than wasting
-    slots on ~0-contribution dummy columns.
-    """
+   
     X = build_feature_row(history, forecast_time, city_name, medians, feature_columns)
 
-    # Background sample for LinearExplainer: use the training medians
-    # as a single representative "typical" baseline row. Cheap and
-    # reasonably interpretable — contributions are relative to "what if
-    # every feature were at its typical training value".
+
     background_df = pd.DataFrame([medians])[feature_columns]
 
     explainer = _build_explainer(model_kind, model, background_df)
     shap_values = explainer.shap_values(X)
 
-    # TreeExplainer/LinearExplainer both return shape (1, n_features)
-    # for a single-output regressor; flatten to a 1D array of per-feature
-    # contributions for this one row.
+
     shap_row = np.array(shap_values).reshape(-1)
 
     entries = []
@@ -124,9 +83,7 @@ def explain_prediction(
 
 
 if __name__ == "__main__":
-    # Quick manual test: explain the current live prediction for one
-    # city using the best registered model. Run from repo root:
-    #   python -m src.explainability
+
     from src.feature_pipeline import get_hopsworks_project
     from src.forecasting import load_classical_model, MODEL_CHOICES
     from src.inference import load_city_history

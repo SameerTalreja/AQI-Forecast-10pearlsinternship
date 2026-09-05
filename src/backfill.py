@@ -1,19 +1,3 @@
-"""Backfills historical data so we have enough history for real model
-training — run once (or occasionally) rather than on the hourly cron.
-
-Uses OpenWeather's Air Pollution History API (free, hourly resolution,
-available back to 2020-11-27) for pollutant concentrations, since
-AQICN's free tier doesn't expose deep historical data. AQI is derived
-from the historical PM2.5 concentration via src/aqi_utils.py, keeping
-it on the same 0-500 scale as AQICN's live AQI.
-
-Known limitation (documented for the write-up): historical weather
-fields (temp/humidity/wind/pressure) are not backfilled here, since
-OpenWeather's historical weather API requires a paid subscription tier.
-Backfilled rows will have NaN weather fields; only live pipeline rows
-(going forward) have real weather. This is a reasonable scope cut for
-project timeline — noted as a "future work" item.
-"""
 
 import argparse
 import logging

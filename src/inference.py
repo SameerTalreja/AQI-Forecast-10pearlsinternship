@@ -1,16 +1,6 @@
 """Loads the best-performing registered model and generates a 72-hour
 (3-day) AQI forecast per city.
 
-Core design — recursive forecasting:
-Our models are trained as single-step predictors (predict AQI "now"
-from lag/rolling features computed from the past). To project 72 hours
-ahead, we predict hour+1, append that prediction to the city's history,
-then use it (along with real history) to compute the lag/rolling
-features needed to predict hour+2, and so on. Error compounds across
-this chain — the model's single-step RMSE (measured in
-training_pipeline.py) is NOT the same as its 72-hour-ahead accuracy.
-This is a known, documented limitation of the recursive approach and
-worth calling out explicitly in the project write-up.
 """
 
 import json
@@ -35,8 +25,6 @@ logger = logging.getLogger(__name__)
 MODEL_NAMES = ["aqi_ridge", "aqi_random_forest", "aqi_xgboost"]
 DOWNLOAD_DIR = "models/_inference_download"
 
-# How far back (hours) to seed the recursive forecast's starting history
-# — needs to cover the largest lag/rolling window (24h) with margin.
 HISTORY_SEED_HOURS = 72
 
 
@@ -57,11 +45,7 @@ def aqi_to_category(aqi: float) -> str:
     return "Hazardous"
 
 
-# ---------------------------------------------------------------------
-# Core recursive forecasting logic — no Hopsworks dependency, so it can
-# be unit tested with a plain scikit-learn-style model and synthetic
-# history.
-# ---------------------------------------------------------------------
+
 
 def _lookup_lag(history: dict, target_time: pd.Timestamp, lag_hours: int, tolerance_hours: float):
     """Find the history value nearest to (target_time - lag_hours),
@@ -141,20 +125,7 @@ def recursive_forecast(
     history: dict, last_timestamp: pd.Timestamp,
     horizon_hours: int = FORECAST_HOURS_AHEAD,
 ) -> pd.DataFrame:
-    """
-    Generate `horizon_hours` of forward predictions for one city.
-
-    Args:
-        model: fitted model with .predict(X)
-        medians: dict of column -> fallback value (from training)
-        feature_columns: exact column order the model expects
-        city_name: for the city_* one-hot columns
-        history: {pd.Timestamp: aqi_value} seed history (mutated/extended in place)
-        last_timestamp: the most recent known real timestamp
-        horizon_hours: how many hours ahead to forecast
-
-    Returns: DataFrame with columns [city, timestamp, predicted_aqi, aqi_category, is_hazardous]
-    """
+ 
     history = dict(history)  # don't mutate caller's copy
     results = []
 
@@ -178,21 +149,13 @@ def recursive_forecast(
     return pd.DataFrame(results)
 
 
-# ---------------------------------------------------------------------
-# Hopsworks-dependent orchestration
-# ---------------------------------------------------------------------
 
+# Hopsworks-dependent orchestration
 def get_best_model_info(project):
     """
     Compare the LATEST version of each model type by test RMSE (lower
     is better) and return the winner's metadata.
 
-    Deliberately does NOT rely on mr.get_model(name=name) with no
-    version argument — that call silently defaults to VERSION 1 (the
-    oldest registered version), not the latest, which resurrected our
-    already-fixed pm25 leakage bug once before. Instead we explicitly
-    list every version via mr.get_models(name=name) and pick the one
-    with the highest version number ourselves.
     """
     mr = project.get_model_registry()
     candidates = []
@@ -227,11 +190,7 @@ def load_model_artifacts(model_meta):
         prep = json.load(f)
     medians, feature_columns = prep["medians"], prep["feature_columns"]
 
-    # Defensive guard: refuse to run inference with a model trained on
-    # concurrent pollutant readings (pm25, pm10, etc.) — these are the
-    # known leakage columns from an earlier bug. Catching this here
-    # means a future version-selection mistake fails loudly instead of
-    # silently producing flat, meaningless predictions again.
+
     leaky_cols = {"pm25", "pm10", "no2", "o3", "so2", "co"} & set(feature_columns)
     if leaky_cols:
         raise RuntimeError(

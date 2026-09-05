@@ -93,14 +93,7 @@ def lstm_recursive_forecast(
     model, scalers: dict, seq_length: int, city_order: list, city_name: str,
     history: dict, last_timestamp: pd.Timestamp, horizon_hours: int = FORECAST_HOURS_AHEAD,
 ) -> pd.DataFrame:
-    """
-    LSTM version of recursive forecasting. Unlike the classical models'
-    flat feature vector, the LSTM needs a rolling WINDOW of the last
-    `seq_length` scaled AQI values, plus the city as a one-hot side
-    input. Each predicted (scaled) value slides into the window for
-    the next step, same recursive principle as recursive_forecast() in
-    inference.py but with sequence-shaped inputs instead of flat rows.
-    """
+
     if city_name not in scalers:
         raise ValueError(f"No scaler found for city '{city_name}' — was it in the LSTM training data?")
     scaler = scalers[city_name]
@@ -145,10 +138,7 @@ def lstm_recursive_forecast(
 
 
 def forecast_city(city_name: str, model_choice: str, project=None) -> pd.DataFrame:
-    """
-    Unified entry point: forecast 72h ahead for one city using the
-    chosen model (any of MODEL_CHOICES' display names).
-    """
+
     if model_choice not in MODEL_CHOICES:
         raise ValueError(f"Unknown model choice '{model_choice}'. Options: {list(MODEL_CHOICES.keys())}")
 
@@ -172,7 +162,7 @@ def forecast_city(city_name: str, model_choice: str, project=None) -> pd.DataFra
 
 
 if __name__ == "__main__":
-    # Quick manual test: forecast one city with each model
+
     project = get_hopsworks_project()
     for choice in MODEL_CHOICES:
         print(f"\n=== {choice} ===")

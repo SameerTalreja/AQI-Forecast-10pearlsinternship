@@ -5,16 +5,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# --- API Keys (set these in your .env file) ---
+#API Keys 
 AQICN_API_KEY = os.getenv("AQICN_API_KEY", "")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 HOPSWORKS_API_KEY = os.getenv("HOPSWORKS_API_KEY", "")
 
-# --- API Base URLs ---
+#API Base URLs 
 AQICN_BASE_URL = "https://api.waqi.info/feed"
 OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5"
 
-# --- Cities (lat/lon used for AQICN geo-lookup and OpenWeather) ---
+
 CITIES = {
     "Quetta": {"station": "A544306", "lat": 30.1798, "lon": 66.9750},
     "Lahore": {"station": "lahore", "lat": 31.5497, "lon": 74.3436},
@@ -26,7 +26,7 @@ CITIES = {
 
 DEFAULT_CITY = "Quetta"
 
-# --- Feature engineering constants ---
+# Feature engineering constants
 POLLUTANT_FIELDS = ["pm25", "pm10", "no2", "o3", "so2", "co"]
 WEATHER_FIELDS = ["temp", "humidity", "wind_speed", "pressure"]
 
@@ -35,14 +35,14 @@ ROLLING_WINDOWS_HOURS = [3, 24]
 
 TARGET_COLUMN = "aqi"
 
-# --- Alerting ---
+# Alerting
 HAZARDOUS_AQI_THRESHOLD = 150  # "Unhealthy" and above on US EPA scale
 
-# --- Hopsworks ---
+# Hopsworks
 HOPSWORKS_PROJECT_NAME = os.getenv("HOPSWORKS_PROJECT_NAME", "aqi_forecast")
 FEATURE_GROUP_NAME = "aqi_features"
 FEATURE_GROUP_VERSION = 1
 FEATURE_GROUP_PRIMARY_KEY = ["city", "timestamp"]
 
-# --- Forecast horizon ---
+# Forecast horizon 
 FORECAST_HOURS_AHEAD = 72  # 3 days

@@ -1,7 +1,3 @@
-/* ============================================================
-   Pakistan AQI Forecast — Streamlit port of the web design system
-   ============================================================ */
-
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap");
 
 :root {
@@ -18,14 +14,14 @@
   --glass-shadow: 0 18px 50px -22px rgba(27, 39, 51, 0.35);
 }
 
-/* ---------- Streamlit chrome reset ---------- */
+/* Streamlit chrome reset  */
 #MainMenu, footer, header[data-testid="stHeader"] { visibility: hidden; }
 [data-testid="stStatusWidget"] { display: none !important; }
 .stApp { background: var(--bg); }
 .block-container { max-width: 68rem; padding: 1.25rem 1.25rem 4rem; position: relative; z-index: 1; }
 html, body, .stApp, [class*="css"] { font-family: "Manrope", ui-sans-serif, system-ui, sans-serif; color: var(--ink); }
 
-/* ---------- centered loading overlay ---------- */
+/* centered loading overlay */
 .loading-overlay {
   position: fixed; inset: 0; z-index: 9999;
   display: flex; align-items: center; justify-content: center;
@@ -56,7 +52,7 @@ html, body, .stApp, [class*="css"] { font-family: "Manrope", ui-sans-serif, syst
   font-size: 0.85rem; color: rgba(27, 39, 51, 0.55); margin-top: 0.3rem;
 }
 
-/* ---------- ambient sky ---------- */
+/*ambient sky  */
 .bg-sky-canvas { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .bg-blob { position: absolute; border-radius: 9999px; filter: blur(80px); opacity: 0.42; will-change: transform; }
 .bg-blob--1 { width: 46vw; height: 46vw; top: -8vw; left: -6vw; background: var(--sky); animation: blob-drift-a 24s ease-in-out infinite; }
@@ -68,7 +64,7 @@ html, body, .stApp, [class*="css"] { font-family: "Manrope", ui-sans-serif, syst
 @keyframes blob-drift-b { 0%, 100% { transform: translate3d(0,0,0) scale(1.05); } 50% { transform: translate3d(-7vw, 7vh, 0) scale(0.9); } }
 @keyframes blob-drift-c { 0%, 100% { transform: translate3d(0,0,0) scale(0.95); } 50% { transform: translate3d(5vw, -6vh, 0) scale(1.18); } }
 
-/* ---------- glass ---------- */
+/*  glass */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(140%);
@@ -79,7 +75,7 @@ html, body, .stApp, [class*="css"] { font-family: "Manrope", ui-sans-serif, syst
 
 .topbar { display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 0.25rem 1.5rem; font-family: "Fraunces", serif; font-size: 1.15rem; font-weight: 600; }
 
-/* ---------- hero ---------- */
+/*  hero */
 .hero {
   position: relative; overflow: hidden; padding: 2.75rem 1.5rem 2.5rem; text-align: center;
   transition: background 0.9s ease, box-shadow 0.9s ease;
@@ -92,7 +88,7 @@ html, body, .stApp, [class*="css"] { font-family: "Manrope", ui-sans-serif, syst
 .hero__guidance { margin: 1rem auto 0; max-width: 34rem; font-size: 1.02rem; line-height: 1.6; color: rgba(27, 39, 51, 0.82); }
 .pill-badge { display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 1.1rem; padding: 0.45rem 1.05rem; border-radius: 9999px; font-weight: 700; font-size: 0.9rem; color: #fff; transition: background 0.9s ease; }
 
-/* ---------- chips (Streamlit buttons restyled) ---------- */
+/* chips (Streamlit buttons) */
 .stButton > button {
   font-family: "Manrope", sans-serif; font-weight: 600; font-size: 0.9rem;
   width: 100%; padding: 0.55rem 1.1rem; border-radius: 9999px;
@@ -121,7 +117,7 @@ div[data-testid="column"]:nth-child(5) .stButton > button { animation-delay: -2.
 div[data-testid="column"]:nth-child(6) .stButton > button { animation-delay: -3.5s; }
 @keyframes chip-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
 
-/* ---------- alert ---------- */
+/*  alert  */
 .alert-card {
   display: flex; gap: 0.9rem; align-items: flex-start;
   padding: 1.1rem 1.25rem; border-radius: 1.25rem;
@@ -135,7 +131,7 @@ div[data-testid="column"]:nth-child(6) .stButton > button { animation-delay: -3.
   50% { box-shadow: 0 0 0 12px rgba(226, 63, 93, 0), 0 22px 48px -22px rgba(226, 63, 93, 0.75); }
 }
 
-/* ---------- cards, chart, table ---------- */
+/* cards, chart, table  */
 .section-title { font-family: "Fraunces", serif; font-size: 1.32rem; font-weight: 600; }
 .section-sub { font-size: 0.88rem; color: rgba(27, 39, 51, 0.6); margin-top: 0.25rem; }
 .card-pad { padding: 1.25rem 1.4rem; }
@@ -154,7 +150,7 @@ div[data-testid="stDataFrame"] { border-radius: 1rem; overflow: hidden; }
 
 .cat-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 9999px; margin-right: 0.5rem; vertical-align: middle; }
 
-/* ---------- driver list (SHAP explanation, plain-language) ---------- */
+/*  driver list (SHAP explanation, plain-language)  */
 .driver-list { display: flex; flex-direction: column; gap: 0.55rem; }
 .driver-row {
   display: flex; align-items: center; gap: 0.9rem;
@@ -187,10 +183,10 @@ div[data-testid="stDataFrame"] { border-radius: 1rem; overflow: hidden; }
 
 .site-footer { margin-top: 2.5rem; text-align: center; font-size: 0.82rem; line-height: 1.7; color: rgba(27, 39, 51, 0.55); }
 
-/* ---------- tabs ---------- */
+/*  tabs  */
 div[data-testid="stTabs"] button[role="tab"] {
   font-family: "Fraunces", serif; font-weight: 600; font-size: 1rem;
-  color: rgba(27, 39, 51, 0.55);
+  color: rgba(21, 30, 39, 0.55);
 }
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
   color: var(--sky);

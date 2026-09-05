@@ -2,8 +2,6 @@
 multiple models (Ridge, Random Forest, XGBoost), evaluates with
 RMSE/MAE/R², and registers all of them in the Hopsworks Model Registry.
 
-Run manually or via the daily GitHub Actions cron:
-    python -m src.training_pipeline
 """
 
 import json
@@ -28,21 +26,7 @@ logger = logging.getLogger(__name__)
 MODELS_DIR = "models"
 MAX_MISSING_FRACTION = 0.5  # drop a feature column if more than this fraction is missing
 
-# Columns that are identifiers, targets, or redundant with other columns
-# — never used as model input features.
-#
-# IMPORTANT — leakage guard: raw concurrent pollutant readings (pm25,
-# pm10, no2, o3, so2, co) are EXCLUDED even though they're numeric and
-# would look like reasonable features. AQI is directly derived from
-# PM2.5 (either by AQICN internally, or by our own compute_aqi_from_pm25
-# formula for backfilled rows) — so including the same-moment pm25
-# lets the model trivially reverse-engineer that formula instead of
-# genuinely forecasting. At real inference time we never know the
-# future PM2.5 any more than we know the future AQI, so training on it
-# produces a model with unrealistically perfect offline metrics that
-# cannot actually forecast anything. Only LAGGED/rolling versions of
-# these signals (computed from strictly past readings) are legitimate
-# predictive features.
+
 NON_FEATURE_COLUMNS = [
     "timestamp", "city", TARGET_COLUMN,
     "matched_station", "dominant_pollutant",
@@ -61,17 +45,7 @@ def load_training_data(project) -> pd.DataFrame:
 
 
 def build_feature_matrix(df: pd.DataFrame, fit_medians: dict | None = None, fit_columns: list | None = None):
-    """
-    Prepare X, y from the raw engineered DataFrame:
-      - drop rows with missing target
-      - drop feature columns that are mostly missing
-      - one-hot encode `city`
-      - impute remaining NaNs with column medians (computed on TRAIN only
-        when fit_medians is None; reused on test/inference when passed in)
 
-    Returns (X, y, medians_used, feature_columns) so the same
-    preprocessing can be replayed exactly at inference time.
-    """
     df = df.copy()
     df = df.dropna(subset=[TARGET_COLUMN])
     df[TARGET_COLUMN] = pd.to_numeric(df[TARGET_COLUMN], errors="coerce")
@@ -92,11 +66,6 @@ def build_feature_matrix(df: pd.DataFrame, fit_medians: dict | None = None, fit_
             continue
         feature_df[col] = pd.to_numeric(feature_df[col], errors="coerce")
 
-    # One-hot encode city BEFORE column reconciliation below, so both
-    # the "fit" (train) and "reuse fit_columns" (test/inference)
-    # branches operate on a DataFrame that already includes city_*
-    # columns — otherwise the reconciliation step and a second
-    # concat would each add their own copy, producing duplicates.
     city_dummies = pd.get_dummies(df["city"], prefix="city")
     feature_df = pd.concat([feature_df.reset_index(drop=True), city_dummies.reset_index(drop=True)], axis=1)
 
@@ -109,16 +78,13 @@ def build_feature_matrix(df: pd.DataFrame, fit_medians: dict | None = None, fit_
             logger.info(f"Dropping mostly-missing feature columns: {sorted(dropped)}")
         feature_df = feature_df[keep_cols]
     else:
-        # Inference/test phase: force exact same columns as training.
-        # Columns missing entirely at this stage are a schema mismatch
-        # (e.g. a city one-hot category absent from this slice) rather
-        # than a genuine sensor gap, so fill with 0, not NaN/median.
+ 
         for col in fit_columns:
             if col not in feature_df.columns:
                 feature_df[col] = 0
         feature_df = feature_df[fit_columns]
 
-    # Impute remaining NaNs with medians (fit on train, reused on test)
+
     if fit_medians is None:
         medians = feature_df.median(numeric_only=True).to_dict()
     else:

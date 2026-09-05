@@ -2,17 +2,6 @@
 features (hour, day, month) and derived features (lags, rolling stats,
 AQI change rate).
 
-Design note on irregular sampling:
-Different cities' AQICN stations report at very different frequencies
-(some near-hourly, some only every few days). Because our Hopsworks
-Feature Group uses (city, timestamp) as its primary key — and
-`timestamp` is the station's own reading time, not our collection
-time — re-fetching the same stale reading naturally overwrites the
-same row rather than creating a duplicate. So: we dedupe on
-(city, timestamp) first, then compute lag/rolling features against
-that deduplicated per-city time series using time-based (not
-positional) windows. This means lag/rolling features reflect genuinely
-new readings and real elapsed time, not artificial hourly buckets.
 """
 
 import logging
@@ -24,9 +13,7 @@ from src.config import LAG_HOURS, ROLLING_WINDOWS_HOURS, POLLUTANT_FIELDS
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# How much slack to allow when looking for "the reading ~N hours ago"
-# in an irregularly-sampled series. E.g. for a 24h lag, accept anything
-# between 20h and 28h prior as "close enough" to 24h ago.
+
 LAG_TOLERANCE_FRACTION = 0.2
 
 
@@ -42,12 +29,7 @@ def add_time_features(df: pd.DataFrame, timestamp_col: str = "timestamp") -> pd.
 
 
 def _dedupe_by_city_timestamp(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Drop duplicate (city, timestamp) rows — these represent the *same*
-    underlying station reading fetched again by the hourly pipeline
-    while the station hadn't updated yet. Keeps the most recently
-    fetched copy (in case fields like is_stale changed).
-    """
+   
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
     df = df.dropna(subset=["timestamp"])
@@ -65,12 +47,6 @@ def _add_lag_for_city(city_df: pd.DataFrame, lag_hours: int, target_col: str = "
     from approximately `lag_hours` hours before each row's timestamp,
     using nearest matching with a tolerance window (handles irregular
     sampling — there usually isn't a reading at exactly t-N).
-
-    We search for a reading near (row_time - lag_hours), rather than
-    shifting the lookup table itself, so a row can never match against
-    its own timestamp — the target search time is always lag_hours away
-    from "now", and tolerance is kept smaller than lag_hours so a row
-    cannot accidentally match itself.
     """
     city_df = city_df.sort_values("timestamp").reset_index(drop=True)
     lookup_col = f"lag_{lag_hours}h_{target_col}"
@@ -111,12 +87,6 @@ def add_lag_features(df: pd.DataFrame, target_col: str = "aqi") -> pd.DataFrame:
 
 
 def add_rolling_features(df: pd.DataFrame, target_col: str = "aqi") -> pd.DataFrame:
-    """
-    Add rolling mean/std over time-based windows (e.g. '3h', '24h') per
-    city. Uses pandas time-based rolling, which correctly handles
-    irregular sampling (aggregates whatever readings actually fall
-    inside the trailing window, rather than assuming fixed spacing).
-    """
     df = df.sort_values(["city", "timestamp"]).reset_index(drop=True)
 
     pieces = []
@@ -136,10 +106,7 @@ def add_rolling_features(df: pd.DataFrame, target_col: str = "aqi") -> pd.DataFr
 
 
 def add_aqi_change_rate(df: pd.DataFrame, target_col: str = "aqi") -> pd.DataFrame:
-    """
-    Add aqi_change_rate = (aqi_t - aqi_{t-1}) / aqi_{t-1}, where t-1 is
-    the previous genuine reading for that city (not a fixed hour ago).
-    """
+
     df = df.sort_values(["city", "timestamp"]).reset_index(drop=True)
     df["aqi_change_rate"] = None
 
@@ -154,12 +121,6 @@ def add_aqi_change_rate(df: pd.DataFrame, target_col: str = "aqi") -> pd.DataFra
 
 
 def engineer_features(raw_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Full feature engineering pipeline: dedupe -> time features ->
-    lag features -> rolling features -> change rate.
-    Input: raw DataFrame from data_ingestion (one row per city snapshot).
-    Output: DataFrame ready to push to the Hopsworks Feature Group.
-    """
     if raw_df.empty:
         logger.warning("engineer_features received an empty DataFrame.")
         return raw_df
@@ -175,11 +136,6 @@ def engineer_features(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    # Quick manual test: run `python -m src.feature_engineering` from repo
-    # root. Fetches a live snapshot and shows engineered columns.
-    # Note: a single snapshot has no history yet, so lag/rolling columns
-    # will be mostly empty/NaN on a first run — this just verifies the
-    # code runs cleanly, not that the values are meaningful yet.
     from src.data_ingestion import fetch_all_cities_snapshot
 
     raw = fetch_all_cities_snapshot()

@@ -3,8 +3,6 @@ cities — city comparisons, time trends, daily/weekly patterns, and a
 data-quality summary (which stations are actually reporting fresh
 data, since we found real gaps in this during the project).
 
-Functions here are pure pandas logic, deliberately separated from the
-Hopsworks-loading step so they can be tested without a live connection.
 """
 
 import logging
@@ -17,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def _prep(df: pd.DataFrame) -> pd.DataFrame:
-    """Common cleanup: parse timestamp, coerce aqi to numeric, dedupe."""
+  
     df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, errors="coerce")
     df["aqi"] = pd.to_numeric(df["aqi"], errors="coerce")
@@ -39,7 +37,7 @@ def city_summary_stats(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def daily_trend(raw_df: pd.DataFrame) -> pd.DataFrame:
-    """Per-city daily mean AQI over time — for a multi-line trend chart."""
+    """Per-city daily mean AQI over time  for a multi-line trend chart."""
     df = _prep(raw_df)
     if df.empty:
         return pd.DataFrame(columns=["city", "day", "aqi"])
@@ -87,13 +85,7 @@ def weekday_pattern(raw_df: pd.DataFrame, city: str | None = None) -> pd.DataFra
 
 
 def data_freshness_summary(raw_df: pd.DataFrame, now: pd.Timestamp | None = None) -> pd.DataFrame:
-    """
-    For each city: how many readings we have, when the latest one is,
-    and how many hours old that latest reading is right now. This
-    surfaces the real station-freshness gaps we found during the
-    project (some cities update near-hourly, others every few days) —
-    an honest, useful data-quality view rather than hiding the issue.
-    """
+
     df = _prep(raw_df)
     if now is None:
         now = pd.Timestamp.now(tz="UTC")
@@ -109,9 +101,6 @@ def data_freshness_summary(raw_df: pd.DataFrame, now: pd.Timestamp | None = None
     return summary.sort_values("hours_since_latest").reset_index(drop=True)
 
 
-# ---------------------------------------------------------------------
-# Hopsworks-dependent loading (kept thin and separate)
-# ---------------------------------------------------------------------
 
 def load_all_history(fs) -> pd.DataFrame:
     """Read the full raw AQI history across all cities from Hopsworks."""
@@ -124,8 +113,7 @@ def load_all_history(fs) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    # Quick manual test: print the summary tables using live data.
-    # Run from repo root: python -m src.eda
+
     from src.feature_pipeline import get_hopsworks_project, get_feature_store
 
     project = get_hopsworks_project()

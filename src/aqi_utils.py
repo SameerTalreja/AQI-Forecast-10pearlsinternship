@@ -1,19 +1,3 @@
-"""Converts raw PM2.5 concentration (µg/m³) to the standard 0-500 US EPA
-AQI scale, using the official EPA breakpoint table.
-
-Why this exists: AQICN's live feed already returns a computed AQI value.
-OpenWeather's historical Air Pollution API, which we use for backfill,
-only returns raw pollutant concentrations (µg/m³) — not a pre-computed
-AQI. To keep the target variable on a consistent scale across both live
-data and backfilled historical data, we compute AQI from PM2.5
-ourselves using the same public EPA formula AQICN uses internally.
-
-Note: EPA's official AQI is technically based on a 24-hour average
-PM2.5 concentration. We apply the same breakpoint formula to hourly
-readings as an approximation (common practice, but worth noting as a
-simplification in the project write-up).
-"""
-
 # (conc_low, conc_high, aqi_low, aqi_high) — EPA PM2.5 breakpoints, µg/m³
 PM25_BREAKPOINTS = [
     (0.0, 12.0, 0, 50),
