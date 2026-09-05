@@ -36,7 +36,7 @@ from src.eda import (
 st.set_page_config(
     page_title="Pakistan AQI Forecast",
     page_icon="🌤️",
-    layout="centered",
+    layout="wide",
 )
 
 CSS = (Path(__file__).parent / "style.css").read_text(encoding="utf-8")
@@ -44,6 +44,15 @@ st.markdown(
         f"""
         <style>
             {CSS}
+            .block-container {{
+                max-width: 1500px;
+                margin: 0 auto;
+                padding: 2.5rem 4rem 4rem;
+            }}
+            [data-testid="stAppViewContainer"] > .main {{
+                display: flex;
+                justify-content: center;
+            }}
             [data-testid="stExpander"] summary,
             [data-testid="stExpander"] summary:hover,
             [data-testid="stExpander"] summary:focus,
