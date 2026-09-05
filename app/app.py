@@ -348,6 +348,7 @@ with tab_forecast:
                 "background-color": "#eef7fb",
                 "color": "#17324d",
                 "border-color": "#c6dce5",
+                "text-align": "left",
             }
         ).set_table_styles(
             [
@@ -357,6 +358,14 @@ with tab_forecast:
                         ("background-color", "#d8edf4 !important"),
                         ("color", "#17324d !important"),
                         ("font-weight", "600 !important"),
+                        ("text-align", "left !important"),
+                    ],
+                },
+                {
+                    "selector": "tbody td:nth-child(3), thead th:nth-child(3)",
+                    "props": [
+                        ("text-align", "center !important"),
+                        ("direction", "ltr !important"),
                     ],
                 }
             ]
